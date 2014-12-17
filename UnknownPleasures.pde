@@ -4,112 +4,66 @@ import ddf.minim.analysis.*;
 Minim minim;
 AudioPlayer song;
 FFT fft;
-AudioInput in;
 
-String songName;
-String songPath;
-boolean songLoaded = false;
-boolean songPlaying = false;
-
-PShape poly;
-int sides;
-float r;
 float mult;
-
 float audio;
-float angle;
-float z;
-float x;
-float y;
-    
-int colorIndex;
-color currentColor;
-color[] colors = {
-  color(255, 255, 255),
-  color(255, 0, 0),
-  color(0, 255, 0),
-  color(0, 0, 255)
-};
-
-float arr;
-FloatList floatX;
-ArrayList<FloatList> floats;
-
+ArrayList<PShape> waves;
 int vizWidth;
 int lines;
+float xOffset;
+float yOffset;
+PShape wave;
 
 void setup() {
-  floats = new ArrayList<FloatList>();
-  if (sketchFullScreen()) {
-    size(displayWidth, displayHeight, P2D); 
-  } else {
-    size(500, 500, P2D);
-  }
-  minim = new Minim(this);
-  songPath = "./jd.mp3";
-  songName = songPath;
-  songLoaded = true;
-  sides = 360;
-  r = 100;
-  mult = 100;
-  colorIndex = 0;
-  currentColor = colors[colorIndex];
-  background(0);
-  lines = 30;
+	if (sketchFullScreen()) {
+		size(displayWidth, displayHeight, P2D);
+	} else {
+		size(500, 500, P2D);
+	}
+	background(0);
+	waves = new ArrayList<PShape>();
+	mult = 100;
+	lines = 30;
+	vizWidth = 300;
+	xOffset = (width - vizWidth)/2;
+	yOffset = 100;
+	minim = new Minim(this);
+	song = minim.loadFile("./jd.mp3", vizWidth);
+	// song.mute();
+	song.play();
 }
 
 
 void draw() {
-  if (songLoaded) {
-    if (!songPlaying) {
-      song = minim.loadFile(songName, width);
-//      song.mute();
-      song.play();
-     
-      songPlaying = true;
-    }
-    audioViz();
-  }
-}
+	background(0);
+	wave = createShape();
+	wave.beginShape();
+	for (int i = 0; i < vizWidth; i++) {
+		wave.stroke(255);
+		if (i == vizWidth-1 || i == vizWidth-2) wave.noStroke();
+		wave.fill(0);
+		audio = song.mix.get(i) * mult;
+		wave.vertex(i, audio);
+	}
+	wave.stroke(0);
+	wave.vertex(vizWidth, height);
+	wave.vertex(0, height);
+	wave.endShape();
 
+	if (waves.size() == lines) {
+		waves.remove(0);
+	}
+	waves.add(wave);
 
-void audioViz() {
-  vizWidth = 400;
-  background(0);
-  
-  floatX = new FloatList();
-  for (int i = 0; i < vizWidth; i++) {
-      audio = song.mix.get(i);
-      z = r + (audio * mult) + 30;
-      floatX.append(z);
-  }
-  if (floats.size() == lines) {
-    floats.remove(0);
-  }
-  floats.add(floatX);
-  
-  for(int i=0; i < floats.size(); i++) {
-    poly = createShape();
-    poly.beginShape();
-    for (int j = 0; j < vizWidth; j++) {
-        arr = floats.get(i).get(j);
-        poly.fill(0, 0, 0);
-        poly.stroke(currentColor);
-        if (j == vizWidth-1 || j == vizWidth-2) {
-          poly.stroke(0);
-        }
-        poly.vertex(j, arr);
-    }
-    
-    poly.vertex(vizWidth, height);
-    poly.vertex(0, height);
-    poly.endShape();
-    shape(poly, (width - vizWidth)/2, i*7);
-  }
-  println(frameRate);
+	if (waves.size() == lines) {
+		for (int i = 0; i < lines; i++) {
+			shape(waves.get(i), xOffset, yOffset+(i*7));
+		}
+	}
+	println(frameRate);
 }
 
 
 boolean sketchFullScreen() {
-  return false;
+	return false;
 }
