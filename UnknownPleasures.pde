@@ -14,6 +14,9 @@ float xOffset;
 float yOffset;
 PShape wave;
 
+float[] multArr;
+int ctr;
+
 void setup() {
 	if (sketchFullScreen()) {
 		size(displayWidth, displayHeight, P2D);
@@ -31,6 +34,15 @@ void setup() {
 	song = minim.loadFile("./jd.mp3", vizWidth);
 	// song.mute();
 	song.play();
+	multArr = new float[vizWidth];
+	for (int i = 0; i < vizWidth; i++) {
+		if (i >= vizWidth/2) {
+			ctr--;
+		} else {
+			ctr++;
+		}
+		multArr[i] = ctr;
+	}
 }
 
 
@@ -42,7 +54,7 @@ void draw() {
 		wave.stroke(255);
 		if (i == vizWidth-1 || i == vizWidth-2) wave.noStroke();
 		wave.fill(0);
-		audio = song.mix.get(i) * mult;
+		audio = song.mix.get(i) * (multArr[i] / 1.3);
 		wave.vertex(i, audio);
 	}
 	wave.stroke(0);
